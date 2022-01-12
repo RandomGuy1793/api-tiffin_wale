@@ -1,0 +1,18 @@
+{
+  "name": "tiffin_wale-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Faisal Alam",
+  "license": "ISC",
+  "dependencies": {
+    "config": "^3.3.7",
+    "cors": "^2.8.5",
+    "express": "^4.17.2",
+    "mongoose": "^6.1.6",
+    "winston": "^3.4.0"
+  }
+}
