@@ -1,4 +1,5 @@
 const winston=require('winston')
+require('express-async-errors')
 
 module.exports=function(){
     process.on('uncaughtException', (ex)=>{

@@ -1,9 +1,9 @@
-const config=require('config')
 const express=require('express')
 const app=express();
 
-require('./startup/db')()
 require('./startup/errorLog')()
+require('./startup/db')()
+require('./startup/config')()
 require('./startup/routes')(app)
 
 const PORT = process.env.PORT || 5000
