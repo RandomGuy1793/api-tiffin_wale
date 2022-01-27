@@ -1,5 +1,7 @@
 const mongoose=require('mongoose')
-
+const config=require('config')
+const jwt=require('jsonwebtoken')
+const Joi=require('joi')
 const customerSchema=new mongoose.Schema({
     name:{
         type: String,
@@ -41,6 +43,36 @@ const customerSchema=new mongoose.Schema({
     }
 })
 
+const jwtKey=config.get('jwtKey');
+
+customerSchema.methods.generateAuthToken=function(){
+    return jwt.sign({_id:this._id}, jwtKey)
+}
 const customer=mongoose.model('customer', customerSchema);
 
-module.exports=customer
+const loginValidate=(customer)=>{
+    const schema=Joi.object({
+        email: Joi.string().email().min(3).max(50).required(),
+        password: Joi.string().min(3).max(255)
+    })
+    return schema.validate(customer).error;
+}
+
+function customerValidate(customer){
+    const addressSchema=Joi.object({
+        area: Joi.string().min(15).max(255).required(),
+        city: Joi.string().min(3).max(50).required(),
+        pincode: Joi.string().length(6).regex(/^[0-9]+$/).required()
+    })
+    const customerSchema=Joi.object({
+        name: Joi.string().min(3).max(50).required(),
+        email: Joi.string().email().min(3).max(50).required(),
+        password: Joi.string().min(3).max(255).required(),
+        address: addressSchema.required()
+    })
+    return customerSchema.validate(customer).error
+}
+
+exports.customerLoginValidate=loginValidate
+exports.customerValidate=customerValidate
+exports.customerModel=customer

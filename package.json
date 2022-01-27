@@ -9,10 +9,15 @@
   "author": "Faisal Alam",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "config": "^3.3.7",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
+    "joi": "^17.5.0",
+    "joi-objectid": "^4.0.2",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
     "mongoose": "^6.1.6",
     "winston": "^3.4.0"
   }
