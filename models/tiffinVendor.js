@@ -2,6 +2,7 @@ const mongoose=require('mongoose')
 const config=require('config')
 const jwt=require('jsonwebtoken')
 const Joi = require('joi')
+const _=require('lodash')
 Joi.objectId = require('joi-objectid')(Joi)
 
 const tiffinVendorSchema=new mongoose.Schema({
@@ -119,8 +120,60 @@ tiffinVendorSchema.methods.generateAuthToken=function(){
     return jwt.sign({_id:this._id}, jwtKey)
 }
 
+tiffinVendorSchema.statics.register=async function(details, propertiesToPick){
+    const newVendor=new this(_.pick(details, propertiesToPick))
+    newVendor.rating.numberOfRatings=0
+    newVendor.rating.currentRating=0
+    await newVendor.save()
+    return newVendor
+}
+
+tiffinVendorSchema.methods.updateDetails=async function(details){
+    this.businessName=details.businessName
+    this.email=details.email
+    this.password=details.password
+    this.address=_.pick(details.address, ['area', 'city', 'pincode'])
+    this.phone=details.phone
+    this.monthRate=_.pick(details.monthRate, ['oldRate', 'discountRate', 'minMonthForNewRate'])
+    this.routine=_.pick(details.routine, ['breakfast', 'lunch', 'dinner'])
+    this.hasVeg=details.hasVeg
+    await this.save()
+}
+
+tiffinVendorSchema.methods.updateRating=async function(requestRating, custId){
+    const newRating=_.pick(requestRating, ['rating','review.title', 'review.text'])
+    newRating.customerId=custId
+    const rating=this.rating
+    let oldCustRating=0
+    for(let i=0; i<rating.customerRatings.length; i++){
+        const curr=rating.customerRatings[i]
+        if(curr.customerId.equals(newRating.customerId)){
+            oldCustRating=curr.rating
+            rating.customerRatings[i]=newRating
+            break;
+        }
+    }
+    
+    rating.currentRating=getCurrRating(rating.numberOfRatings, rating.currentRating, oldCustRating, parseInt(newRating.rating))
+    if(oldCustRating===0){
+        rating.customerRatings.push(newRating)
+        rating.numberOfRatings++
+    }
+    await this.save()
+    return newRating
+}
+
+tiffinVendorSchema.methods.acceptSubscription=async function(subscriptionId){
+    this.pending=this.pending.filter(item=>!item.equals(subscriptionId))
+    await this.save()
+}
+
 const tiffinVendor=mongoose.model('tiffinVendor', tiffinVendorSchema);
 
+function getCurrRating(numberOfRatings, currRating, oldCustRating, newCustRating){
+    if(!oldCustRating) numberOfRatings++
+    return (currRating*numberOfRatings-oldCustRating+newCustRating)/(numberOfRatings)
+}
 
 const addressObjJoi={
     area: Joi.string().min(15).max(255).required(),

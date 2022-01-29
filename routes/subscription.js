@@ -21,7 +21,7 @@ router.post('/add', auth, async (req, res)=>{
     const error=validateSubscription(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
-    const customer=await customerModel.findById(req.data)
+    const customer=await customerModel.findById(req.data).select('_id')
     if(!customer) return res.status(400).send('Customer not available')
     req.body.customerId=customer._id
 
@@ -30,17 +30,16 @@ router.post('/add', auth, async (req, res)=>{
     req.body.monthRateForEachOpted=getRate(vendor.monthRate, req.body.durationDays);
     req.body.isAccepted=false
 
-    const subscription=new subscriptionModel(_.pick(req.body, ['customerId', 'vendorId', 'monthRateForEachOpted', 'opted.breakfast', 'opted.lunch','opted.dinner', 'durationDays', 'isAccepted']))
+    const subscription=await subscriptionModel.addSubscription(req.body)
     vendor.pending.push(subscription._id)
     await vendor.save()
-    await subscription.save()
-    
     res.send(subscription);
 })
 
 router.delete('/customer/delete/:id', [auth, validateObjId], async (req, res)=>{
     const customer=await customerModel.findById(req.data)
     if(!customer) return res.status(400).send('invalid customer')
+    
     const subscription=await subscriptionModel.findById(req.params.id)
     if(!subscription) return res.status(400).send('subscription unavailable')
     if(!subscription.customerId.equals(customer._id)) return res.status(403).send('different customer trying to delete')

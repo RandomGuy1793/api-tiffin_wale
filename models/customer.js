@@ -2,6 +2,8 @@ const mongoose=require('mongoose')
 const config=require('config')
 const jwt=require('jsonwebtoken')
 const Joi=require('joi')
+const _=require('lodash')
+const bcrypt=require('bcrypt')
 const customerSchema=new mongoose.Schema({
     name:{
         type: String,
@@ -48,6 +50,21 @@ const jwtKey=config.get('jwtKey');
 customerSchema.methods.generateAuthToken=function(){
     return jwt.sign({_id:this._id}, jwtKey)
 }
+
+customerSchema.statics.register=async function(details, propertiesToPick){
+    const newCustomer=new this(_.pick(details, propertiesToPick))
+    await newCustomer.save();
+    return newCustomer
+}
+
+customerSchema.methods.updateDetails=async function(details){
+    this.name=details.name
+    this.email=details.email
+    this.password=details.password
+    this.address=_.pick(details.address, ['area', 'city', 'pincode'])
+    await this.save()
+}
+
 const customer=mongoose.model('customer', customerSchema);
 
 const loginValidate=(customer)=>{

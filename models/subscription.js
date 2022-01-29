@@ -1,5 +1,6 @@
 const mongoose=require('mongoose')
 const Joi = require('joi')
+const _=require('lodash')
 Joi.objectId = require('joi-objectid')(Joi)
 
 const subscriptionSchema=new mongoose.Schema({
@@ -43,8 +44,13 @@ const subscriptionSchema=new mongoose.Schema({
     }
 })
 
-const subscriptionModel=mongoose.model('subscription', subscriptionSchema)
+subscriptionSchema.statics.addSubscription=async function(details){
+    const subscription=new this(_.pick(details, ['customerId', 'vendorId', 'monthRateForEachOpted', 'opted.breakfast', 'opted.lunch','opted.dinner', 'durationDays', 'isAccepted']))
+    await subscription.save()
+    return subscription
+}
 
+const subscriptionModel=mongoose.model('subscription', subscriptionSchema)
 
 function validateSubscription(sub){
     const optedSchema=Joi.object({
