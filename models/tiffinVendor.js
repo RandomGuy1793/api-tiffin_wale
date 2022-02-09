@@ -164,8 +164,16 @@ tiffinVendorSchema.methods.updateRating=async function(requestRating, custId){
 }
 
 tiffinVendorSchema.methods.acceptSubscription=async function(subscriptionId){
-    this.pending=this.pending.filter(item=>!item.equals(subscriptionId))
+    let isSubcriptionPresent=false
+    this.pending=this.pending.filter(item=>{
+        if(!isSubcriptionPresent && item.equals(subscriptionId)){
+            isSubcriptionPresent=true
+            return false
+        }
+        return true
+    })
     await this.save()
+    return isSubcriptionPresent
 }
 
 const tiffinVendor=mongoose.model('tiffinVendor', tiffinVendorSchema);

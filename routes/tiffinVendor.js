@@ -34,7 +34,7 @@ router.post('/register', async (req, res)=>{
     if(error) return res.status(400).send(error.details[0].message)
 
     const vendor=await vendorModel.findOne({email: req.body.email}).select('_id')
-    if(vendor) return res.status(400).send('Vendor is already registered.')
+    if(vendor) return res.status(409).send('Vendor is already registered.')
     let propertiesToPick= ['businessName', 'email', 'address.area', 'address.city', 'address.pincode', 'phone', 'monthRate.oldRate', 'monthRate.discountRate', 'monthRate.minMonthForNewRate', 'routine.breakfast', 'routine.lunch', 'routine.dinner', 'hasVeg', 'password' ]
     req.body.password=await bcrypt.hash(req.body.password, 10)
 
@@ -49,7 +49,7 @@ router.post('/login', async(req, res)=>{
     const error=vendorLoginValidate(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
-    const vendor=await vendorModel.findOne({email: req.body.email}).select('_id')
+    const vendor=await vendorModel.findOne({email: req.body.email}).select('_id password')
     if(!vendor) return res.status(400).send("invalid email or password")
 
     const isPasswordCorrect=await bcrypt.compare(req.body.password, vendor.password)
@@ -65,7 +65,7 @@ router.put('/edit', auth, async(req, res)=>{
 
     let vendor=await vendorModel.findOne({email: req.body.email})
     if(vendor && !vendor._id.equals(req.data._id)){
-        return res.status(400).send('email is already in use.')
+        return res.status(409).send('email is already in use.')
     }
     req.body.password=await bcrypt.hash(req.body.password, 10)
     vendor=await vendorModel.findById(req.data._id).select('-pending -rating -__v')
@@ -78,10 +78,10 @@ router.post('/review', auth, async (req, res)=>{
     if(error) return res.status(400).send(error.details[0].message)
 
     const customer=await customerModel.findById(req.data).select('_id')
-    if(!customer) return res.status(400).send('customer does not exist')
+    if(!customer) return res.status(404).send('customer does not exist')
 
     const vendor=await vendorModel.findById(req.body.vendorId)
-    if(!vendor) return res.status(400).send('Tiffin vendor unavailable')
+    if(!vendor) return res.status(404).send('Tiffin vendor unavailable')
 
     const newRating=await vendor.updateRating(req.body, req.data._id)
     res.send(newRating)
@@ -89,11 +89,12 @@ router.post('/review', auth, async (req, res)=>{
 
 router.put('/accept-subscription/:id', [auth, validateObjId], async(req, res)=>{
     const vendor=await vendorModel.findById(req.data._id).select('pending')
-    if(!vendor) return res.status(400).send('vendor not available')
-    vendor.acceptSubscription(req.params.id)
+    if(!vendor) return res.status(404).send('vendor not available')
+    const isSubscriptionAccepted=await vendor.acceptSubscription(req.params.id)
+    if(!isSubscriptionAccepted) return res.status(404).send('subscription is not pending')
 
     const subscription=await subscriptionModel.findById(req.params.id).select('isAccepted')
-    if(!subscription) return res.status(400).send('subscription is not available')
+    if(!subscription) return res.status(404).send('subscription is not available')
     subscription.isAccepted=true;
     await subscription.save()
     res.send(_.pick(subscription, ['isAccepted']))

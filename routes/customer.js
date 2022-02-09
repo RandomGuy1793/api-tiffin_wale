@@ -10,7 +10,7 @@ router.post('/register', async (req, res)=>{
     if(error) return res.status(400).send(error.details[0].message)
 
     const customer=await customerModel.findOne({email: req.body.email}).select('_id')
-    if(customer) return res.status(400).send('Customer is already registered.')
+    if(customer) return res.status(409).send('Customer is already registered.')
 
     let propertiesToPick=['name', 'email', 'address.area', 'address.city', 'address.pincode', 'password']
     req.body.password=await bcrypt.hash(req.body.password, 10)
@@ -39,7 +39,7 @@ router.put('/edit', auth, async (req, res)=>{
 
     let customer=await customerModel.findOne({email: req.body.email}).select('_id')
     if(customer && !customer._id.equals(req.data._id)){
-        return res.status(400).send('email is already in use.')
+        return res.status(409).send('email is already in use.')
     }
     req.body.password=await bcrypt.hash(req.body.password, 10)
     customer=await customerModel.findById(req.data._id).select('-__v')

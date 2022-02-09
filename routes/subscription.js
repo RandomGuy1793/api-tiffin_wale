@@ -22,7 +22,7 @@ router.post('/add', auth, async (req, res)=>{
     if(error) return res.status(400).send(error.details[0].message)
 
     const customer=await customerModel.findById(req.data).select('_id')
-    if(!customer) return res.status(400).send('Customer not available')
+    if(!customer) return res.status(404).send('Customer not available')
     req.body.customerId=customer._id
 
     const vendor=await vendorModel.findById(req.body.vendorId).select('monthRate pending')
@@ -38,10 +38,10 @@ router.post('/add', auth, async (req, res)=>{
 
 router.delete('/customer/delete/:id', [auth, validateObjId], async (req, res)=>{
     const customer=await customerModel.findById(req.data)
-    if(!customer) return res.status(400).send('invalid customer')
+    if(!customer) return res.status(404).send('customer not available')
     
     const subscription=await subscriptionModel.findById(req.params.id)
-    if(!subscription) return res.status(400).send('subscription unavailable')
+    if(!subscription) return res.status(404).send('subscription unavailable')
     if(!subscription.customerId.equals(customer._id)) return res.status(403).send('different customer trying to delete')
     if(!subscription.isAccepted){
         await vendorModel.updateOne({_id: subscription.vendorId}, {
@@ -56,9 +56,9 @@ router.delete('/customer/delete/:id', [auth, validateObjId], async (req, res)=>{
 
 router.delete('/tiffin-vendor/delete/:id', [auth, validateObjId], async (req, res)=>{
     const vendor=await vendorModel.findById(req.data._id).select('_id pending')
-    if(!vendor) return res.status(400).send('invalid vendor')
+    if(!vendor) return res.status(404).send('vendor not available')
     const subscription=await subscriptionModel.findById(req.params.id)
-    if(!subscription) return res.status(400).send('subscription unavailable')
+    if(!subscription) return res.status(404).send('subscription unavailable')
     if(!subscription.vendorId.equals(vendor._id)) return res.status(403).send('different vendor trying to delete')
     if(!subscription.isAccepted){
         vendor.pending=vendor.pending.filter(item=>!item.equals(subscription._id))
