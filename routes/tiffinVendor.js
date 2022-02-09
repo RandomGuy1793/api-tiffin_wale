@@ -12,7 +12,7 @@ router.get('/pincode/:pincode', async (req, res)=>{
     const error=addressObjJoi.pincode.validate(req.params.pincode).error
     if(error) return res.status(400).send(error.details[0].message)
 
-    const vendors=await vendorModel.find({"address.pincode": req.params.pincode}).select("-password -pending -__v")
+    const vendors=await vendorModel.find({"address.pincode": req.params.pincode}).select("businessName rating.numberOfRatings rating.currentRating monthRate hasVeg")
     res.send(vendors)
 })
 
@@ -20,8 +20,13 @@ router.get('/city/:city', async (req, res)=>{
     const error=addressObjJoi.city.validate(req.params.city).error
     if(error) return res.status(400).send(error.details[0].message)
 
-    const vendors=await vendorModel.find({"address.city": req.params.city}).select("-password -pending -__v")
+    const vendors=await vendorModel.find({"address.city": req.params.city}).select("businessName rating.numberOfRatings rating.currentRating monthRate hasVeg")
     res.send(vendors)
+})
+
+router.get('/:id', validateObjId, async(req, res)=>{
+    const vendor=await vendorModel.findById(req.params.id).select("-password -pending -__v")
+    res.send(vendor)
 })
 
 router.post('/register', async (req, res)=>{

@@ -3,7 +3,7 @@ const config=require('config')
 const jwt=require('jsonwebtoken')
 const Joi=require('joi')
 const _=require('lodash')
-const bcrypt=require('bcrypt')
+
 const customerSchema=new mongoose.Schema({
     name:{
         type: String,

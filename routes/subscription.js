@@ -8,12 +8,12 @@ const validateObjId=require('../middleware/validateObjId')
 const router=express.Router()
 
 router.get('/customer', auth, async (req, res)=>{
-    const subscriptions=await subscriptionModel.find({customerId: req.data})
+    const subscriptions=await subscriptionModel.find({customerId: req.data._id})
     res.send(subscriptions)
 })
 
 router.get('/tiffin-vendor', auth, async (req, res)=>{
-    const subscriptions=await subscriptionModel.find({vendorId: req.data})
+    const subscriptions=await subscriptionModel.find({vendorId: req.data._id})
     res.send(subscriptions)
 })
 
@@ -44,7 +44,7 @@ router.delete('/customer/delete/:id', [auth, validateObjId], async (req, res)=>{
     if(!subscription) return res.status(400).send('subscription unavailable')
     if(!subscription.customerId.equals(customer._id)) return res.status(403).send('different customer trying to delete')
     if(!subscription.isAccepted){
-        const result=await vendorModel.updateOne({_id: subscription.vendorId}, {
+        await vendorModel.updateOne({_id: subscription.vendorId}, {
             $pull:{
                 pending: subscription._id
             }
