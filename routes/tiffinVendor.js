@@ -17,10 +17,11 @@ router.get('/pincode/:pincode', async (req, res)=>{
 })
 
 router.get('/city/:city', async (req, res)=>{
-    const error=addressObjJoi.city.validate(req.params.city).error
+    const city=req.params.city.toLowerCase()
+    const error=addressObjJoi.city.validate(city).error
     if(error) return res.status(400).send(error.details[0].message)
 
-    const vendors=await vendorModel.find({"address.city": req.params.city}).select("businessName rating.numberOfRatings rating.currentRating monthRate hasVeg")
+    const vendors=await vendorModel.find({"address.city": city}).select("businessName rating.numberOfRatings rating.currentRating monthRate hasVeg")
     res.send(vendors)
 })
 
@@ -38,6 +39,7 @@ router.post('/register', async (req, res)=>{
     let propertiesToPick= ['businessName', 'email', 'address.area', 'address.city', 'address.pincode', 'phone', 'monthRate.oldRate', 'monthRate.discountRate', 'monthRate.minMonthForNewRate', 'routine.breakfast', 'routine.lunch', 'routine.dinner', 'hasVeg', 'password' ]
     req.body.password=await bcrypt.hash(req.body.password, 10)
 
+    req.body.address.city=req.body.address.city.toLowerCase()
     const newVendor=await vendorModel.register(req.body, propertiesToPick)
     const token=newVendor.generateAuthToken()
     propertiesToPick.pop()      // remove last element from array i.e. password
@@ -69,6 +71,7 @@ router.put('/edit', auth, async(req, res)=>{
     }
     req.body.password=await bcrypt.hash(req.body.password, 10)
     vendor=await vendorModel.findById(req.data._id).select('-pending -rating -__v')
+    req.body.address.city=req.body.address.city.toLowerCase()
     await vendor.updateDetails(req.body)
     res.send('updated successfully')
 })
