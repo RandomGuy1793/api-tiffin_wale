@@ -60,7 +60,7 @@ customerSchema.statics.register=async function(details, propertiesToPick){
 customerSchema.methods.updateDetails=async function(details){
     this.name=details.name
     this.email=details.email
-    this.password=details.password
+    if(details.password) this.password=details.password
     this.address=_.pick(details.address, ['area', 'city', 'pincode'])
     await this.save()
 }
@@ -75,19 +75,25 @@ const loginValidate=(customer)=>{
     return schema.validate(customer).error;
 }
 
-function customerValidate(customer){
+function customerValidate(customer, isRegistering){
     const addressSchema=Joi.object({
         area: Joi.string().min(15).max(255).required(),
         city: Joi.string().min(3).max(50).required(),
         pincode: Joi.string().length(6).regex(/^[0-9]+$/).required()
     })
-    const customerSchema=Joi.object({
+    const registerSchema=Joi.object({
         name: Joi.string().min(3).max(50).required(),
         email: Joi.string().email().min(3).max(50).required(),
         password: Joi.string().min(3).max(255).required(),
         address: addressSchema.required()
     })
-    return customerSchema.validate(customer).error
+    const editSchema=Joi.object({
+        name: Joi.string().min(3).max(50).required(),
+        email: Joi.string().email().min(3).max(50).required(),
+        password: Joi.string().min(3).max(255),
+        address: addressSchema.required()
+    })
+    return isRegistering ? registerSchema.validate(customer).error : editSchema.validate(customer).error
 }
 
 exports.customerLoginValidate=loginValidate

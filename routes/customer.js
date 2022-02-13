@@ -5,8 +5,14 @@ const {customerModel, customerLoginValidate, customerValidate}=require('../model
 const auth=require('../middleware/auth')
 const router=express.Router()
 
+router.get('/', auth, async(req, res)=>{
+    const customer=await customerModel.findById(req.data).select('-__v, -_id, -password')
+    if(!customer) return res.status(404).send('customer not found')
+    res.send(customer)
+})
+
 router.post('/register', async (req, res)=>{
-    const error=customerValidate(req.body)
+    const error=customerValidate(req.body, true);
     if(error) return res.status(400).send(error.details[0].message)
 
     const customer=await customerModel.findOne({email: req.body.email}).select('_id')
@@ -34,14 +40,14 @@ router.post('/login', async (req, res)=>{
 })
 
 router.put('/edit', auth, async (req, res)=>{
-    const error=customerValidate(req.body)
+    const error=customerValidate(req.body, false)
     if(error) return res.status(400).send(error.details[0].message)
 
     let customer=await customerModel.findOne({email: req.body.email}).select('_id')
     if(customer && !customer._id.equals(req.data._id)){
         return res.status(409).send('email is already in use.')
     }
-    req.body.password=await bcrypt.hash(req.body.password, 10)
+    if(req.body.password) req.body.password=await bcrypt.hash(req.body.password, 10)
     customer=await customerModel.findById(req.data._id).select('-__v')
     await customer.updateDetails(req.body)
     res.send('updated successfully')

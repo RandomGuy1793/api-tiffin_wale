@@ -30,8 +30,14 @@ router.get('/:id', validateObjId, async(req, res)=>{
     res.send(vendor)
 })
 
+router.get('/', auth, async(req, res)=>{
+    const vendor=await vendorModel.findById(req.data).select('-__v, -_id, -password')
+    if(!vendor) return res.status(404).send('vendor not found')
+    res.send(vendor)
+})
+
 router.post('/register', async (req, res)=>{
-    const error=vendorValidate(req.body)
+    const error=vendorValidate(req.body, true)
     if(error) return res.status(400).send(error.details[0].message)
 
     const vendor=await vendorModel.findOne({email: req.body.email}).select('_id')
@@ -62,14 +68,15 @@ router.post('/login', async(req, res)=>{
 })
 
 router.put('/edit', auth, async(req, res)=>{
-    const error=vendorValidate(req.body)
+    const error=vendorValidate(req.body, false)
     if(error) return res.status(400).send(error.details[0].message)
 
     let vendor=await vendorModel.findOne({email: req.body.email})
     if(vendor && !vendor._id.equals(req.data._id)){
         return res.status(409).send('email is already in use.')
     }
-    req.body.password=await bcrypt.hash(req.body.password, 10)
+    if(req)
+    if(req.body.password) req.body.password=await bcrypt.hash(req.body.password, 10)
     vendor=await vendorModel.findById(req.data._id).select('-pending -rating -__v')
     req.body.address.city=req.body.address.city.toLowerCase()
     await vendor.updateDetails(req.body)

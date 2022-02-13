@@ -131,7 +131,7 @@ tiffinVendorSchema.statics.register=async function(details, propertiesToPick){
 tiffinVendorSchema.methods.updateDetails=async function(details){
     this.businessName=details.businessName
     this.email=details.email
-    this.password=details.password
+    if(details.password) this.password=details.password
     this.address=_.pick(details.address, ['area', 'city', 'pincode'])
     this.phone=details.phone
     this.monthRate=_.pick(details.monthRate, ['oldRate', 'discountRate', 'minMonthForNewRate'])
@@ -189,7 +189,7 @@ const addressObjJoi={
     pincode: Joi.string().length(6).regex(/^[0-9]+$/).required()
 }
 
-function validateTiffinVendor(vendor){
+function validateTiffinVendor(vendor, isRegistering){
     const addressSchema=Joi.object({
         ...addressObjJoi
     })
@@ -203,7 +203,7 @@ function validateTiffinVendor(vendor){
         lunch: Joi.string().min(3).max(50).required(),
         dinner: Joi.string().min(3).max(50).required()
     })
-    const vendorSchema=Joi.object({
+    const registerSchema=Joi.object({
         businessName: Joi.string().min(3).max(50).required(),
         email: Joi.string().email().min(3).max(50).required(),
         password: Joi.string().min(3).max(255).required(),
@@ -213,7 +213,17 @@ function validateTiffinVendor(vendor){
         routine: routineSchema.required(),
         hasVeg: Joi.boolean().required()
     })
-    return vendorSchema.validate(vendor).error
+    const editSchema=Joi.object({
+        businessName: Joi.string().min(3).max(50).required(),
+        email: Joi.string().email().min(3).max(50).required(),
+        password: Joi.string().min(3).max(255),
+        address: addressSchema.required(),
+        phone: Joi.string().length(10).required(),
+        monthRate: rateSchema.required(),
+        routine: routineSchema.required(),
+        hasVeg: Joi.boolean().required()
+    })
+    return isRegistering ? registerSchema.validate(vendor).error : editSchema.validate(vendor).error
 }
 
 function validateLogin(vendor){
