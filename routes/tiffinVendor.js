@@ -27,6 +27,7 @@ router.get('/city/:city', async (req, res)=>{
 
 router.get('/:id', validateObjId, async(req, res)=>{
     const vendor=await vendorModel.findById(req.params.id).select("-password -pending -__v")
+    if(!vendor) return res.status(404).send('vendor not found')
     res.send(vendor)
 })
 
@@ -57,7 +58,7 @@ router.post('/login', async(req, res)=>{
     const error=vendorLoginValidate(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
-    const vendor=await vendorModel.findOne({email: req.body.email}).select('_id password')
+    const vendor=await vendorModel.findOne({email: req.body.email}).select('_id password businessName')
     if(!vendor) return res.status(400).send("invalid email or password")
 
     const isPasswordCorrect=await bcrypt.compare(req.body.password, vendor.password)
@@ -80,7 +81,8 @@ router.put('/edit', auth, async(req, res)=>{
     vendor=await vendorModel.findById(req.data._id).select('-pending -rating -__v')
     req.body.address.city=req.body.address.city.toLowerCase()
     await vendor.updateDetails(req.body)
-    res.send('updated successfully')
+    const token=vendor.generateAuthToken();
+    res.header('x-auth-token', token).send()
 })
 
 router.post('/review', auth, async (req, res)=>{
@@ -103,11 +105,10 @@ router.put('/accept-subscription/:id', [auth, validateObjId], async(req, res)=>{
     const isSubscriptionAccepted=await vendor.acceptSubscription(req.params.id)
     if(!isSubscriptionAccepted) return res.status(404).send('subscription is not pending')
 
-    const subscription=await subscriptionModel.findById(req.params.id).select('isAccepted')
+    const subscription=await subscriptionModel.findById(req.params.id)
     if(!subscription) return res.status(404).send('subscription is not available')
-    subscription.isAccepted=true;
-    await subscription.save()
-    res.send(_.pick(subscription, ['isAccepted']))
+    await subscription.acceptSubscription()
+    res.send(subscription)
 })
 
 module.exports=router

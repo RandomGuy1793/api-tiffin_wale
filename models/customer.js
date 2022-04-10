@@ -48,7 +48,7 @@ const customerSchema=new mongoose.Schema({
 const jwtKey=config.get('jwtKey');
 
 customerSchema.methods.generateAuthToken=function(){
-    return jwt.sign({_id:this._id}, jwtKey)
+    return jwt.sign({_id:this._id, name:this.name}, jwtKey)
 }
 
 customerSchema.statics.register=async function(details, propertiesToPick){
@@ -69,28 +69,28 @@ const customer=mongoose.model('customer', customerSchema);
 
 const loginValidate=(customer)=>{
     const schema=Joi.object({
-        email: Joi.string().email().min(3).max(50).required(),
-        password: Joi.string().min(3).max(255)
+        email: Joi.string().trim().email().min(3).max(50).required(),
+        password: Joi.string().trim().min(3).max(255)
     })
     return schema.validate(customer).error;
 }
 
 function customerValidate(customer, isRegistering){
     const addressSchema=Joi.object({
-        area: Joi.string().min(15).max(255).required(),
-        city: Joi.string().min(3).max(50).required(),
-        pincode: Joi.string().length(6).regex(/^[0-9]+$/).required()
+        area: Joi.string().trim().min(15).max(255).required(),
+        city: Joi.string().trim().min(3).max(50).required(),
+        pincode: Joi.string().trim().length(6).regex(/^[0-9]+$/).required()
     })
     const registerSchema=Joi.object({
-        name: Joi.string().min(3).max(50).required(),
-        email: Joi.string().email().min(3).max(50).required(),
-        password: Joi.string().min(3).max(255).required(),
+        name: Joi.string().trim().min(3).max(50).required(),
+        email: Joi.string().trim().email().min(3).max(50).required(),
+        password: Joi.string().trim().min(3).max(255).required(),
         address: addressSchema.required()
     })
     const editSchema=Joi.object({
-        name: Joi.string().min(3).max(50).required(),
-        email: Joi.string().email().min(3).max(50).required(),
-        password: Joi.string().min(3).max(255),
+        name: Joi.string().trim().min(3).max(50).required(),
+        email: Joi.string().trim().email().min(3).max(50).required(),
+        password: Joi.string().trim().min(3).max(255),
         address: addressSchema.required()
     })
     return isRegistering ? registerSchema.validate(customer).error : editSchema.validate(customer).error

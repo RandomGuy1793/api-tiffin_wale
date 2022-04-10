@@ -31,7 +31,7 @@ router.post('/login', async (req, res)=>{
     const error=customerLoginValidate(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
-    const customer=await customerModel.findOne({email: req.body.email}).select('_id password')
+    const customer=await customerModel.findOne({email: req.body.email}).select('_id password name')
     if(!customer) return res.status(400).send("invalid email or password")
     const isPasswordCorrect=await bcrypt.compare(req.body.password, customer.password)
     if(!isPasswordCorrect) return res.status(400).send("invalid email or password")
@@ -43,14 +43,15 @@ router.put('/edit', auth, async (req, res)=>{
     const error=customerValidate(req.body, false)
     if(error) return res.status(400).send(error.details[0].message)
 
-    let customer=await customerModel.findOne({email: req.body.email}).select('_id')
+    let customer=await customerModel.findOne({email: req.body.email}).select('_id name')
     if(customer && !customer._id.equals(req.data._id)){
         return res.status(409).send('email is already in use.')
     }
     if(req.body.password) req.body.password=await bcrypt.hash(req.body.password, 10)
     customer=await customerModel.findById(req.data._id).select('-__v')
     await customer.updateDetails(req.body)
-    res.send('updated successfully')
+    const token=customer.generateAuthToken()
+    res.header('x-auth-token', token).send()
 })
 
 module.exports=router
