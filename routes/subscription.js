@@ -21,7 +21,7 @@ router.post('/add', auth, async (req, res)=>{
     const error=validateSubscription(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
-    const customer=await customerModel.findById(req.data).select('_id name')
+    const customer=await customerModel.findById(req.data).select('_id name address')
     if(!customer) return res.status(404).send('Customer not available')
     req.body.customerId=customer._id
 
@@ -31,6 +31,7 @@ router.post('/add', auth, async (req, res)=>{
     req.body.isAccepted=false
     req.body.vendorName=vendor.businessName
     req.body.customerName=customer.name
+    req.body.address=customer.address
 
     const {breakfast, lunch, dinner}=req.body.opted
     if(!breakfast && !lunch && !dinner) return res.status(400).send('invalid meal selection')

@@ -38,6 +38,25 @@ const subscriptionSchema = new mongoose.Schema({
       default: false,
     },
   },
+  address: {
+    area: {
+      type: String,
+      minlength: 15,
+      maxlength: 255,
+      required: true,
+    },
+    city: {
+      type: String,
+      minlength: 3,
+      maxlength: 50,
+      required: true,
+    },
+    pincode: {
+      type: String,
+      length: 6,
+      required: true,
+    },
+  },
   durationDays: {
     type: Number,
     min: 30,
@@ -66,6 +85,9 @@ subscriptionSchema.statics.addSubscription = async function (details) {
       "opted.lunch",
       "opted.dinner",
       "durationDays",
+      "address.area",
+      "address.city",
+      "address.pincode",
       "isAccepted",
       "vendorName",
       "customerName",
