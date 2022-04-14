@@ -217,7 +217,8 @@ function getCurrRating(
 const addressObjJoi = {
   area: Joi.string().trim().min(15).max(255).required(),
   city: Joi.string().trim().min(3).max(50).required(),
-  pincode: Joi.string().trim()
+  pincode: Joi.string()
+    .trim()
     .length(6)
     .regex(/^[0-9]+$/)
     .required(),
