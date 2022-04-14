@@ -8,10 +8,12 @@ const subscription = require("../routes/subscription");
 
 module.exports = function (app) {
   app.use(express.json());
-  app.use(cors({
-    origin: '*',
-    exposedHeaders: ['x-auth-token'],
-  }))
+  app.use(
+    cors({
+      origin: "*",
+      exposedHeaders: ["x-auth-token"],
+    })
+  );
   app.use("/", root);
   app.use("/api/customer", customer);
   app.use("/api/tiffin-vendor", tiffinVendor);
