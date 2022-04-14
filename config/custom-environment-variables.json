@@ -1,4 +1,4 @@
 {
-    "jwtKey": "tiffin_wale_jwtKey",
-    "mongoDb": "tiffin_wale_mongoDb"
+  "jwtKey": "tiffin_wale_jwtKey",
+  "mongoDb": "tiffin_wale_mongoDb"
 }

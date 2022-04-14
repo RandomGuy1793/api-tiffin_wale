@@ -1,4 +1,4 @@
 {
-    "jwtKey": "",
-    "mongoDb": ""
+  "jwtKey": "",
+  "mongoDb": ""
 }
