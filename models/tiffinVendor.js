@@ -207,11 +207,10 @@ function getCurrRating(
   oldCustRating,
   newCustRating
 ) {
+  const totalStars = currRating * numberOfRatings,
+    diff = newCustRating - oldCustRating;
   if (!oldCustRating) numberOfRatings++;
-  return (
-    (currRating * numberOfRatings - oldCustRating + newCustRating) /
-    numberOfRatings
-  );
+  return (totalStars + diff) / numberOfRatings;
 }
 
 const addressObjJoi = {
